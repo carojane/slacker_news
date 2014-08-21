@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Slacker News</title>
+
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+
+  <body>
+    <header>
+      <a href="/"><img src="img/y18.gif"></a>
+      <h1>Submit</h1>
+    </header>
+    <div id = "wrapper">
+
+     <h3><ul><%@error_message.each do |message|%>
+     <li><%= message  %></li>
+     <%end%>
+     </ul></h3>
+
+      <form action="/submit" method="post">
+        <label for="title">title:</label>
+        <input type="text" id="submit_title" name="title"/><br>
+
+<!--         <form action="/submit" method="post">
+ -->          <label for="url">url:</label>
+          <input type="text" id="submit_url" name="url"/><br>
+
+          <input type="submit" />
+<!--         </form> -->
+      </form>
+
+    </div>
+  </body>
+</html>
