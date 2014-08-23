@@ -13,24 +13,24 @@
       <h1>Submit</h1>
     </header>
     <div id = "wrapper">
-
-     <h3><ul><%@error_message.each do |message|%>
+    <h3><ul><%@error_message.each do |message|%>
      <li><%= message  %></li>
-     <%end%>
-     </ul></h3>
-
-      <form action="/submit" method="post">
+    <%end%></ul></h3>
+      <div id = "form">
+        <form action="/submit" method="post">
         <label for="title">title:</label>
-        <input type="text" id="submit_title" name="title"/><br>
+        <input type="text" id="submit" name="title"></br>
 
-<!--         <form action="/submit" method="post">
- -->          <label for="url">url:</label>
-          <input type="text" id="submit_url" name="url"/><br>
+        <form action="/submit" method="post">
+        <label for="url">url:</label>
+        <input type="text" id="submit" name="url"></br>
 
-          <input type="submit" />
-<!--         </form> -->
-      </form>
-
+        <form>
+        <input type="submit" id="submit_button"/>
+        </form>
+        </form>
+        </form>
+      </div>
     </div>
   </body>
 </html>

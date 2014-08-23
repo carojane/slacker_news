@@ -1,6 +1,7 @@
 require 'sinatra'
 require 'redis'
 require 'json'
+require 'pry'
 
 ##############
 ####METHODS###
@@ -20,6 +21,7 @@ def read_articles
   redis = get_connection
   serialized_articles = redis.lrange("slacker:articles", 0, -1)
 
+  article_data = []
   serialized_articles.each do |article|
     article_data << JSON.parse(article, symbolize_names: true)
   end

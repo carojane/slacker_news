@@ -120,10 +120,38 @@ nav li + li:before {
   padding: 20px;
 }
 
-form {
+#wrapper form {
   padding-top:10px;
-  padding-left: 16px;
+  padding-left: 26px;
   padding-bottom: 20px;
+  margin: 0;
+}
+
+#wrapper h3 {
+  margin: 0;
+  padding: 10px;
+}
+
+div #form {
+  display: block;
+  padding-top: 10px;
+  padding-bottom: 20px;
+}
+
+label {
+  display: inline-block;
+  float: left;
+  clear: left;
+  width: 50px;
+  text-align: right;
+}
+
+
+#submit_button {
+  display: block;
+  float: left;
+  margin-left: 120px;
+  padding: 10px;
 }
 
 /***************************FOOTER***************************/
