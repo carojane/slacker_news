@@ -1,7 +1,6 @@
 require 'sinatra'
 require 'redis'
 require 'json'
-require 'pry'
 
 ##############
 ####METHODS###
