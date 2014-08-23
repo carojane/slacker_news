@@ -2,26 +2,42 @@ require 'sinatra'
 require 'csv'
 require 'pry'
 require 'shotgun'
-require 'uri'
+require 'redis'
+require 'json'
 
 ##############
 ####METHODS###
 ##############
 
-def remove_http(array)
-  array.each do |row|
-    row[:url] = row[:url].gsub(/(http\:\/\/)|(https\:\/\/)/, "")
+def get_connection
+  if ENV.has_key?("REDISCLOUD_URL")
+    Redis.new(url: ENV["REDISCLOUD_URL"])
+  else
+    Redis.new
   end
-  array
 end
 
+########## data
+
 def read_articles
-  article_data = []
-  CSV.foreach("articles.csv", headers: true, header_converters: :symbol) do |row|
-    article_data << row.to_hash
+  redis = get_connection
+  serialized_articles = redis.lrange("slacker:articles", 0, -1)
+
+  serialized_articles.each do |article|
+    article_data << JSON.parse(article, symbolize_names: true)
   end
+
   article_data
 end
+
+def write_articles(id, datetime, title, url)
+  article = { id: id, datetime: datetime, title: title, url: url}
+
+  redis = get_connection
+  redis.rpush("slacker:articles", article.to_json)
+end
+
+########## random key
 
 def random_key
   char = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
@@ -31,17 +47,27 @@ def random_key
   key
 end
 
+########## validate url
+
 def valid_url(url)
   url =~ /(^$)|(^((http|https):\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)/ix
 end
 
-def check_for_url(url, file)
-array = []
-  CSV.foreach(file, headers: true, header_converters: :symbol) do |row|
-    array << row[:url]
-  end
+########## removes http:// from url
 
-  if array.include?(url)
+def remove_http(array)
+  array.each do |row|
+    row[:url] = row[:url].gsub(/(http\:\/\/)|(https\:\/\/)/, "")
+  end
+  array
+end
+
+########## checks if url is in database
+
+def check_for_url(url)
+  array = read_articles
+
+  if array.each {|article| article[:url] == url}
     false
   else
     true
@@ -65,6 +91,7 @@ get '/submit' do
   erb :submit
 end
 
+############# submission page
 
 post '/submit' do
   title = params["title"]
@@ -74,10 +101,8 @@ post '/submit' do
 
   @error_message = []
 
-  if valid_url(url) && check_for_url(url, 'articles.csv') && title != ""
-    CSV.open("articles.csv", "a", headers: true) do |row|
-      row << [id, datetime, title, url]
-    end
+  if valid_url(url) && check_for_url(url) && title != ""
+    write_articles(id, datetime, title, url)
 
     redirect '/'
   else
@@ -89,7 +114,7 @@ post '/submit' do
       @error_message << 'Format of url is invalid'
     end
 
-    unless check_for_url(url, "articles.csv")
+    unless check_for_url(url)
       @error_message << 'That article is already listed'
     end
 
