@@ -1,7 +1,4 @@
 require 'sinatra'
-require 'csv'
-require 'pry'
-require 'shotgun'
 require 'redis'
 require 'json'
 
