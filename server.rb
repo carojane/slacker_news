@@ -1,6 +1,7 @@
 require 'sinatra'
 require 'redis'
 require 'json'
+require 'pry'
 
 ##############
 ####METHODS###
@@ -65,7 +66,7 @@ end
 def check_for_url(url)
   array = read_articles
 
-  if array.each {|article| article[:url] == url}
+  if array.any? {|article| article[:url] == url}
     false
   else
     true
