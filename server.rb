@@ -1,48 +1,40 @@
 require 'sinatra'
-require 'redis'
-require 'json'
+require 'sinatra/reloader'
+require 'pg'
+require 'pry'
 
 ##############
 ####METHODS###
 ##############
 
+########### connection
+
 def get_connection
-  if ENV.has_key?("REDISCLOUD_URL")
-    Redis.new(url: ENV["REDISCLOUD_URL"])
-  else
-    Redis.new
+  begin
+    connection = PG.connect(dbname: 'slacker_news')
+
+    yield(connection)
+
+  ensure
+    connection.close
   end
 end
 
 ########## data
 
 def read_articles
-  redis = get_connection
-  serialized_articles = redis.lrange("slacker:articles", 0, -1)
-
-  article_data = []
-  serialized_articles.each do |article|
-    article_data << JSON.parse(article, symbolize_names: true)
+  get_connection do |conn|
+    query = 'SELECT title, url, datetime FROM articles'
+    conn.exec(query).to_a
   end
-
-  article_data
 end
 
-def write_articles(id, datetime, title, url)
-  article = { id: id, datetime: datetime, title: title, url: url}
-
-  redis = get_connection
-  redis.rpush("slacker:articles", article.to_json)
-end
-
-########## random key
-
-def random_key
-  char = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
-
-  key = ""
-  10.times { key << char[rand(char.size)]}
-  key
+def write_articles(title, url)
+  get_connection do |conn|
+    statements = 'INSERT INTO articles (datetime, title, url)
+      VALUES (now(), $1, $2)'
+    conn.exec(statements, [title, url])
+  end
 end
 
 ########## validate url
@@ -55,7 +47,7 @@ end
 
 def remove_http(array)
   array.each do |row|
-    row[:url] = row[:url].gsub(/(http\:\/\/)|(https\:\/\/)/, "")
+    row["url"] = row["url"].gsub(/(http\:\/\/)|(https\:\/\/)/, "")
   end
   array
 end
@@ -65,7 +57,7 @@ end
 def check_for_url(url)
   array = read_articles
 
-  if array.any? {|article| article[:url] == url}
+  if array.any? {|article| article["url"] == url}
     false
   else
     true
@@ -94,13 +86,11 @@ end
 post '/submit' do
   title = params["title"]
   url = params["url"]
-  datetime = Time.now
-  id = random_key
 
   @error_message = []
 
   if valid_url(url) && check_for_url(url) && title != ""
-    write_articles(id, datetime, title, url)
+    write_articles(title, url)
 
     redirect '/'
   else
